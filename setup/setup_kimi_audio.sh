@@ -64,8 +64,11 @@ else
         --index-url https://download.pytorch.org/whl/cu121
 
     echo "[setup] installing core deps"
+    # NOTE: pin transformers <5.0 — Kimi-Audio's custom modeling code accesses
+    # config.rope_theta directly. transformers 5.x is strict about missing
+    # attributes and raises AttributeError. 4.46.x is the known-good line.
     pip install --no-cache-dir \
-        "transformers>=4.45" accelerate \
+        "transformers>=4.45,<5.0" accelerate \
         soundfile librosa numpy \
         huggingface_hub
 
