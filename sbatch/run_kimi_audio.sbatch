@@ -20,8 +20,8 @@
 #SBATCH --time=04:00:00
 #SBATCH --output=/data/gpfs/projects/punim2341/kaip1/slurm_logs/%x-%j.out
 #SBATCH --error=/data/gpfs/projects/punim2341/kaip1/slurm_logs/%x-%j.err
-#SBATCH --mail-type=FAIL,END
-# Uncomment after confirming address:
+# To enable email notifications, uncomment both lines and set address:
+# #SBATCH --mail-type=FAIL,END
 # #SBATCH --mail-user=jack.peng@student.unimelb.edu.au
 
 set -euo pipefail
