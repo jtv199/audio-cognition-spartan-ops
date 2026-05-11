@@ -20,8 +20,26 @@ case "$(hostname)" in
 esac
 
 # ─── Shared env + modules ────────────────────────────────────────────
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+# Slurm's `sbatch <file>` copies the script to /var/spool/slurm/jobN/slurm_script
+# which breaks BASH_SOURCE[0]-relative resolution. Handle 3 cases in order:
+#   1. SPARTAN_OPS_DIR env-var override (explicit)
+#   2. Real script location via BASH_SOURCE if it resolves to a file with env.sh nearby
+#   3. Conventional project path under punim2341 (fallback for the slurm-copy case)
+if [ -n "${SPARTAN_OPS_DIR:-}" ]; then
+    REPO_DIR="$SPARTAN_OPS_DIR"
+else
+    _bs="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || true)"
+    if [ -n "$_bs" ] && [ -f "$_bs/../env.sh" ]; then
+        REPO_DIR="$(cd "$_bs/.." && pwd)"
+    else
+        REPO_DIR="/data/gpfs/projects/punim2341/kaip1/audio-cognition-benchmark/external/spartan-ops"
+    fi
+fi
+if [ ! -f "$REPO_DIR/env.sh" ]; then
+    echo "ERROR: cannot find env.sh under REPO_DIR=$REPO_DIR" >&2
+    echo "       Set SPARTAN_OPS_DIR=/path/to/external/spartan-ops and re-run." >&2
+    exit 1
+fi
 source "$REPO_DIR/env.sh"
 source "$REPO_DIR/modules.sh"
 

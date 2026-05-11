@@ -35,8 +35,24 @@ REASON_MAX_WORDS="${REASON_MAX_WORDS:-20}"
 MAX_NEW_TOKENS="${MAX_NEW_TOKENS:-96}"
 
 # ─── Shared env + modules ────────────────────────────────────────────
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+# `sbatch <file>` copies the script into /var/spool/slurm/jobN/slurm_script,
+# so BASH_SOURCE[0] no longer points at the submodule. Resolve REPO_DIR
+# robustly: env-var override → BASH_SOURCE if env.sh is nearby → conventional
+# project path fallback.
+if [ -n "${SPARTAN_OPS_DIR:-}" ]; then
+    REPO_DIR="$SPARTAN_OPS_DIR"
+else
+    _bs="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || true)"
+    if [ -n "$_bs" ] && [ -f "$_bs/../env.sh" ]; then
+        REPO_DIR="$(cd "$_bs/.." && pwd)"
+    else
+        REPO_DIR="/data/gpfs/projects/punim2341/kaip1/audio-cognition-benchmark/external/spartan-ops"
+    fi
+fi
+if [ ! -f "$REPO_DIR/env.sh" ]; then
+    echo "ERROR: cannot find env.sh under REPO_DIR=$REPO_DIR" >&2
+    exit 1
+fi
 source "$REPO_DIR/env.sh"
 source "$REPO_DIR/modules.sh"
 
