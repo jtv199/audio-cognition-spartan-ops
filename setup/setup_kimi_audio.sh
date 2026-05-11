@@ -69,18 +69,43 @@ else
         soundfile librosa numpy \
         huggingface_hub
 
-    echo "[setup] installing kimia_infer from MoonshotAI/Kimi-Audio repo"
+    echo "[setup] installing kimi-audio (which provides kimia_infer)"
+    # Two known gotchas:
+    #   1. Don't use 'pip install git+...#egg=kimia_infer' — Kimi's setup.py
+    #      declares package name 'kimi-audio' not 'kimia-infer'; pip rejects
+    #      the inconsistency.
+    #   2. kimi-audio depends on flash-attn, whose build requires torch at
+    #      build time. Pip's default build isolation creates a fresh env
+    #      without torch → ModuleNotFoundError. Install flash-attn first
+    #      with --no-build-isolation, then kimi-audio editable.
     if ! python -c "import kimia_infer" 2>/dev/null; then
-        pip install --no-cache-dir \
-            "git+https://github.com/MoonshotAI/Kimi-Audio.git#egg=kimia_infer" \
-        || {
-            echo "[setup] git+pip failed — falling back to clone + editable install"
-            cd "$PROJ"
-            rm -rf "$PROJ/Kimi-Audio"
-            git clone --depth 1 https://github.com/MoonshotAI/Kimi-Audio.git "$PROJ/Kimi-Audio"
-            cd "$PROJ/Kimi-Audio"
-            pip install --no-cache-dir -e .
-        }
+        # Prereqs for build backends + flash-attn
+        pip install --no-cache-dir packaging wheel ninja setuptools
+
+        echo "[setup] installing flash-attn with --no-build-isolation (10-30 min)"
+        # Setup-time hints for the CUDA build:
+        #   - TORCH_CUDA_ARCH_LIST: A100 = 8.0, H100 = 9.0; cover both so the
+        #     same env works across gpu-a100 and gpu-h100 partitions.
+        #   - MAX_JOBS: cap parallelism so we don't OOM the interactive node
+        #     (16 GB allocated).
+        #   - FLASH_ATTENTION_SKIP_CUDA_BUILD=FALSE: explicit, ensures we
+        #     don't accidentally ship the cpu-only stub.
+        TORCH_CUDA_ARCH_LIST="8.0;9.0" \
+        MAX_JOBS=4 \
+        FLASH_ATTENTION_SKIP_CUDA_BUILD=FALSE \
+            pip install --no-cache-dir --no-build-isolation flash-attn
+
+        echo "[setup] cloning Kimi-Audio + editable install"
+        KIMI_REPO="$PROJ/Kimi-Audio"
+        if [ ! -d "$KIMI_REPO/.git" ]; then
+            rm -rf "$KIMI_REPO"
+            git clone --depth 1 https://github.com/MoonshotAI/Kimi-Audio.git "$KIMI_REPO"
+        fi
+        (
+            cd "$KIMI_REPO"
+            git submodule update --init --recursive
+            pip install --no-cache-dir --no-build-isolation -e .
+        )
     fi
 fi
 
