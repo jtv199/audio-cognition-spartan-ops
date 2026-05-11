@@ -30,7 +30,13 @@ set -euo pipefail
 MANIFEST="${MANIFEST:?set MANIFEST=/path/to/manifest.jsonl}"
 OUT="${OUT:?set OUT=/path/to/output.jsonl}"
 MAX_ITEMS="${MAX_ITEMS:-0}"            # 0 = all
-MODE="${MODE:-reasoned}"
+# Modes (per kimi_official_benchmark.py): direct | reasoned
+#   direct:   send the prompt as-is, return model output verbatim. Right for
+#             open-ended tasks (transcription, phoneme ID, sentence).
+#   reasoned: wrap the prompt with "Think, then output Label: X"; runner parses
+#             for 'Label:' and treats unparseable as empty_generation. Suitable
+#             only for multiple-choice tasks with constrained label sets.
+MODE="${MODE:-direct}"
 REASON_MAX_WORDS="${REASON_MAX_WORDS:-20}"
 MAX_NEW_TOKENS="${MAX_NEW_TOKENS:-96}"
 
