@@ -113,12 +113,21 @@ fi
 MODEL_REPO="moonshotai/Kimi-Audio-7B-Instruct"
 SNAP_DIR="$HF_HUB_CACHE/models--${MODEL_REPO//\//--}/snapshots"
 
-if [ -d "$SNAP_DIR" ] && [ -n "$(ls -A "$SNAP_DIR" 2>/dev/null)" ]; then
-    echo "[setup] $MODEL_REPO weights already present in $HF_HUB_CACHE — skipping download"
+# Check for ACTUAL weight shards, not just metadata. An incomplete download
+# leaves config + tokenizer files but no .safetensors — re-trigger if so.
+WEIGHT_COUNT=0
+if [ -d "$SNAP_DIR" ]; then
+    WEIGHT_COUNT=$(find "$SNAP_DIR" -maxdepth 2 -name "*.safetensors" 2>/dev/null | wc -l)
+fi
+if [ "$WEIGHT_COUNT" -ge 1 ]; then
+    echo "[setup] $MODEL_REPO weights present ($WEIGHT_COUNT safetensors files) — skipping download"
 else
-    echo "[setup] pre-downloading $MODEL_REPO weights to $HF_HOME (~30-60 min)"
-    hf download "$MODEL_REPO" \
-        --include "*.safetensors" "*.json" "tokenizer*" "*.txt" "*.py"
+    echo "[setup] downloading $MODEL_REPO (full repo, ~30 GB, ~30-60 min)"
+    # NOTE: --include takes ONE pattern as a flag value; repeating the flag
+    # accumulates patterns. Space-separated args are interpreted as literal
+    # filenames (per CLI warning), so we must use repeated --include flags.
+    # Simplest correct invocation: just download everything (no filter).
+    hf download "$MODEL_REPO"
 fi
 
 # ─── Smoke test (does kimia_infer import?) ───────────────────────────
