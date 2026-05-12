@@ -95,6 +95,7 @@ Use `setup_kimi_audio.sh`, `verify_kimi_env.sh` and `run_kimi_audio.sbatch` as t
 | Audio Flamingo 3 | `alm-af3` | `nvidia/audio-flamingo-3-hf` | `af3_official_benchmark.py` | Use the `-hf` HF-format port (NOT `nvidia/audio-flamingo-3`, which is NVIDIA's LlavaLlama-format release for their custom codebase). `transformers` from `git+main` until `AudioFlamingo3ForConditionalGeneration` lands in a tagged release. NVIDIA OneWay Noncommercial license. |
 | Phi-4-Multimodal-Instruct | `alm-phi4mm` | `microsoft/Phi-4-multimodal-instruct` | `phi4mm_official_benchmark.py` | Strict pin: `torch==2.6.0`, `transformers==4.48.2`, `peft==0.13.2`, `flash_attn==2.7.4.post1` |
 | Omni-R1 | `alm-omni-r1` | `Haoz0206/Omni-R1` (fine-tuned) + `Qwen/Qwen2.5-Omni-7B` (processor) | `omni_r1_local_smoke.py` (driven via inline loop in sbatch) | RL-tuned Qwen2.5-Omni-Thinker; top MMAU Ga (54.5) from arXiv 2505.09439. Needs `qwen-omni-utils` pip pkg + dual-repo load. |
+| Step-Audio-2-mini | `alm-step-audio2` | `stepfun-ai/Step-Audio-2-mini` | inline driver in `sbatch/run_step_audio2_mini.sbatch` (no jack_benchmark runner — StepFun uses their own `stepaudio2` Python pkg, not standard transformers) | Strict pin: `transformers==4.49.0`. Setup also clones [stepfun-ai/Step-Audio2](https://github.com/stepfun-ai/Step-Audio2) for the `stepaudio2` package + drops a `.pth` pointer in site-packages. Apache 2.0. |
 
 All four envs share `$HF_HOME` so common encoder weights (Whisper variants, etc.) dedupe.
 
