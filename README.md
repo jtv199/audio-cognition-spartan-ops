@@ -92,7 +92,7 @@ Use `setup_kimi_audio.sh`, `verify_kimi_env.sh` and `run_kimi_audio.sbatch` as t
 |---|---|---|---|---|
 | Kimi-Audio-7B-Instruct | `alm-kimi` | `moonshotai/Kimi-Audio-7B-Instruct` | `kimi_official_benchmark.py` | `transformers>=4.45,<5.0`, requires editable install of `kimi-audio` repo for `kimia_infer` |
 | Qwen2-Audio-7B-Instruct | `alm-qwen2-audio` | `Qwen/Qwen2-Audio-7B-Instruct` | `qwen2_audio_instruct_hf_smoke.py` (driven via inline loop in sbatch) | `transformers>=4.45,<5.0` |
-| Audio Flamingo 3 | `alm-af3` | `nvidia/audio-flamingo-3` | `af3_official_benchmark.py` | `transformers>=4.55` (or git+main), NVIDIA OneWay Noncommercial license (accept on HF + `hf auth login`) |
+| Audio Flamingo 3 | `alm-af3` | `nvidia/audio-flamingo-3-hf` | `af3_official_benchmark.py` | Use the `-hf` HF-format port (NOT `nvidia/audio-flamingo-3`, which is NVIDIA's LlavaLlama-format release for their custom codebase). `transformers` from `git+main` until `AudioFlamingo3ForConditionalGeneration` lands in a tagged release. NVIDIA OneWay Noncommercial license. |
 | Phi-4-Multimodal-Instruct | `alm-phi4mm` | `microsoft/Phi-4-multimodal-instruct` | `phi4mm_official_benchmark.py` | Strict pin: `torch==2.6.0`, `transformers==4.48.2`, `peft==0.13.2`, `flash_attn==2.7.4.post1` |
 
 All four envs share `$HF_HOME` so common encoder weights (Whisper variants, etc.) dedupe.

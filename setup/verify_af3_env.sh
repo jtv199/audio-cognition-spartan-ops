@@ -23,7 +23,7 @@ echo; echo "=== soundfile ==="
 python -c 'import soundfile; print("soundfile", soundfile.__version__)' || echo "NOT INSTALLED"
 
 echo; echo "=== AF3 weights ==="
-SNAP_DIR=/data/gpfs/projects/punim2341/kaip1/hf_cache/hub/models--nvidia--audio-flamingo-3/snapshots
+SNAP_DIR=/data/gpfs/projects/punim2341/kaip1/hf_cache/hub/models--nvidia--audio-flamingo-3-hf/snapshots
 if [ -d "$SNAP_DIR" ]; then
     SNAP=$(ls "$SNAP_DIR" | head -1)
     echo "snapshot: $SNAP_DIR/$SNAP"

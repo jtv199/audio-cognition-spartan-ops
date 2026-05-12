@@ -75,7 +75,7 @@ else
         pip install --no-cache-dir --no-build-isolation flash-attn
 fi
 
-MODEL_REPO="nvidia/audio-flamingo-3"
+MODEL_REPO="nvidia/audio-flamingo-3-hf"
 SNAP_DIR="$HF_HUB_CACHE/models--${MODEL_REPO//\//--}/snapshots"
 
 WEIGHT_COUNT=0
