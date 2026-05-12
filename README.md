@@ -79,8 +79,38 @@ The project shares 7M inodes across all users. Every mamba env is ~150-250k file
 
 ## Adding a new model
 
-Each model needs two files:
+Each model needs three files:
 1. `setup/setup_<model>.sh` — env creation + deps install + weight download.
-2. `sbatch/run_<model>.sbatch` — job submission that activates the env and runs the matching `external/jack_benchmark/<model>_official_benchmark.py` runner.
+2. `setup/verify_<model>_env.sh` — env sanity check (torch / transformers / model classes / weights present).
+3. `sbatch/run_<model>.sbatch` — job submission that activates the env and runs the matching `external/jack_benchmark/<model>_official_benchmark.py` runner.
 
-Use `setup_kimi_audio.sh` and `run_kimi_audio.sbatch` as templates; vary only the env name, the pip install line, the HF model ID, and the runner path.
+Use `setup_kimi_audio.sh`, `verify_kimi_env.sh` and `run_kimi_audio.sbatch` as templates; vary only the env name, the pip install line, the HF model ID, and the runner path.
+
+## Models installed
+
+| Model | Env name | HF repo | Runner | Notes |
+|---|---|---|---|---|
+| Kimi-Audio-7B-Instruct | `alm-kimi` | `moonshotai/Kimi-Audio-7B-Instruct` | `kimi_official_benchmark.py` | `transformers>=4.45,<5.0`, requires editable install of `kimi-audio` repo for `kimia_infer` |
+| Qwen2-Audio-7B-Instruct | `alm-qwen2-audio` | `Qwen/Qwen2-Audio-7B-Instruct` | `qwen2_audio_instruct_hf_smoke.py` (driven via inline loop in sbatch) | `transformers>=4.45,<5.0` |
+| Audio Flamingo 3 | `alm-af3` | `nvidia/audio-flamingo-3` | `af3_official_benchmark.py` | `transformers>=4.55` (or git+main), NVIDIA OneWay Noncommercial license (accept on HF + `hf auth login`) |
+| Phi-4-Multimodal-Instruct | `alm-phi4mm` | `microsoft/Phi-4-multimodal-instruct` | `phi4mm_official_benchmark.py` | Strict pin: `torch==2.6.0`, `transformers==4.48.2`, `peft==0.13.2`, `flash_attn==2.7.4.post1` |
+
+All four envs share `$HF_HOME` so common encoder weights (Whisper variants, etc.) dedupe.
+
+## Smoke-test pattern (1-sample manifest)
+
+The first row of `pc-benchmark-pilot/manifests/gudkar_wcgd_full30_manifest.jsonl` is the canonical smoke sample — it's a 3-clip WCGD audio with a multi-audio prompt, exercises the `audio_paths: List[str]` path that all four runners support.
+
+```bash
+# On Spartan, after submodule is up to date:
+head -1 pc-benchmark-pilot/manifests/gudkar_wcgd_full30_manifest.jsonl \
+    > pc-benchmark-pilot/manifests/smoke_1sample_manifest.jsonl
+
+for model in qwen2_audio af3 phi4mm; do
+    MANIFEST=$PWD/pc-benchmark-pilot/manifests/smoke_1sample_manifest.jsonl \
+    OUT=$PWD/runs/smoke_${model}.raw.jsonl \
+    sbatch external/spartan-ops/sbatch/run_${model}.sbatch
+done
+```
+
+Pass criterion per model: output file has 1 row with `response_text` non-empty and not `[empty_generation]`.
