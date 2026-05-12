@@ -88,7 +88,24 @@ nvidia-smi -L 2>&1 | head -4
 python - "$MANIFEST" "$OUT" "$MODEL_REF" "$BASE_REF" "$MAX_ITEMS" "$MAX_NEW_TOKENS" <<'PY'
 import json, os, socket, sys, time
 sys.path.insert(0, os.environ["JACK_BENCH"])
+
+# qwen_omni_utils >=0.0.4 made process_mm_info return a 3-tuple by default,
+# only returning the 4-tuple form when return_video_kwargs=True. The runner
+# (omni_r1_local_smoke.py:242) unpacks 4 values unconditionally. Monkey-patch
+# the function to always pass return_video_kwargs=True so the unpack works.
+import qwen_omni_utils  # noqa: E402
+_orig_process_mm_info = qwen_omni_utils.process_mm_info
+def _patched_process_mm_info(*args, **kwargs):
+    kwargs.setdefault("return_video_kwargs", True)
+    return _orig_process_mm_info(*args, **kwargs)
+qwen_omni_utils.process_mm_info = _patched_process_mm_info
+
 from omni_r1_local_smoke import run_smoke  # noqa: E402
+# After omni_r1_local_smoke imports process_mm_info into its own namespace at
+# call time (inside run_smoke), we need to patch the imported reference too:
+import omni_r1_local_smoke as _orls  # noqa: E402
+if hasattr(_orls, "process_mm_info"):
+    _orls.process_mm_info = _patched_process_mm_info
 
 manifest_path, out_path, model_ref, base_ref, max_items_s, max_new_tokens_s = sys.argv[1:7]
 max_items = int(max_items_s)
