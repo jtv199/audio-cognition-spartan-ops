@@ -54,7 +54,7 @@ mamba activate alm-af3
 MODEL_REF=$(python - <<PY
 import glob, os, sys
 hub = os.environ["HF_HUB_CACHE"]
-pat = os.path.join(hub, "models--nvidia--audio-flamingo-3", "snapshots", "*")
+pat = os.path.join(hub, "models--nvidia--audio-flamingo-3-hf", "snapshots", "*")
 snaps = sorted(glob.glob(pat))
 if not snaps:
     print(f"ERROR: no AF3 snapshot under {pat}", file=sys.stderr)
