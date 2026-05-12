@@ -68,9 +68,11 @@ else
         huggingface_hub sentencepiece protobuf
 
     # qwen_omni_utils ships the process_mm_info() helper that omni_r1_local_smoke.py
-    # imports. Available on PyPI as `qwen-omni-utils`.
-    echo "[setup] installing qwen-omni-utils"
-    pip install --no-cache-dir qwen-omni-utils
+    # imports. The runner unpacks process_mm_info() into 4 values (audio, image,
+    # video, video_kwargs). Older releases (e.g. 0.0.2) return only 3. Pin to a
+    # version that returns 4 to match the runner's signature.
+    echo "[setup] installing qwen-omni-utils (4-tuple API)"
+    pip install --no-cache-dir 'qwen-omni-utils>=0.0.4'
 
     echo "[setup] installing flash-attn (10-30 min build)"
     pip install --no-cache-dir packaging wheel ninja setuptools
