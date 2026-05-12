@@ -16,6 +16,8 @@
 PROJ=/data/gpfs/projects/punim2341/kaip1
 REPO="$PROJ/audio-cognition-benchmark"
 JACK_BENCH="$REPO/external/jack_benchmark"
+# Export so child Python processes (inline heredocs in sbatch wrappers) see them.
+export PROJ REPO JACK_BENCH
 
 export HF_HOME="$PROJ/hf_cache"
 export HUGGINGFACE_HUB_CACHE="$HF_HOME/hub"

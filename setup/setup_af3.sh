@@ -55,15 +55,13 @@ else
         --index-url https://download.pytorch.org/whl/cu121
 
     echo "[setup] installing core deps"
-    # AudioFlamingo3ForConditionalGeneration was added recently. The HF model
-    # card recommends installing transformers from git+main. We pin >=4.55 as a
-    # known-good floor (released after AF3 landed in transformers); if a wheel
-    # this new isn't on PyPI, fall back to git+main. Keep <5.0 to avoid the
-    # rope_theta-style breakage Kimi hit.
+    # AudioFlamingo3ForConditionalGeneration is not yet in any tagged
+    # transformers release (4.57.6 doesn't have it — verified 2026-05-12 by
+    # ImportError). Install from git+main per the HF model card. This is the
+    # only model in the project that needs main; pin to a specific commit
+    # later if the moving target becomes a problem.
     pip install --no-cache-dir \
-        "transformers>=4.55,<5.0" accelerate \
-        || pip install --no-cache-dir \
-            "git+https://github.com/huggingface/transformers" accelerate
+        "git+https://github.com/huggingface/transformers" accelerate
 
     pip install --no-cache-dir \
         soundfile librosa numpy scipy \
