@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 # Kimi-Audio encoder dump for WCGD binary probe.
 #
 # SUBMIT:
