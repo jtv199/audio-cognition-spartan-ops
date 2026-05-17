@@ -82,8 +82,11 @@ else
     # transformers stays at 4.28.0 — SALMONN's models/ code reads internals from
     # that exact minor (e.g. LlamaModel forward signature).
     echo "[setup] installing PyTorch 2.1.2 (cu121 wheel — CUDA 12.4 driver fwd-compatible)"
+    # Install torch + torchvision + torchaudio TOGETHER (timm transitively
+    # requires torchvision; if we leave it for step 2, pip pulls torchvision
+    # 0.23.0 → torch 2.8.0 + cu128 wheels and clobbers our pinned stack).
     pip install --no-cache-dir \
-        torch==2.1.2 torchaudio==2.1.2 \
+        torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 \
         --index-url https://download.pytorch.org/whl/cu121
 
     echo "[setup] installing SALMONN requirements (pinned)"
@@ -94,6 +97,7 @@ else
     # version compatible with transformers 4.28.0 (>=0.13,<0.16 — newer hub
     # removed cached_download which 4.28 imports).
     pip install --no-cache-dir \
+        torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 \
         peft==0.3.0 \
         transformers==4.28.0 \
         sentencepiece==0.1.97 \
