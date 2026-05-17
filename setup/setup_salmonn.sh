@@ -71,14 +71,20 @@ else
     mamba create -y -n "$ENV_NAME" python=3.9 pip
     mamba activate "$ENV_NAME"
 
-    # SALMONN's requirements.txt pins torch==2.0.1 / transformers==4.28.0.
-    # Those wheels predate CUDA 12.4, but the cu118 torch 2.0.1 wheels work
-    # fine against the CUDA 12.4 driver via forward compat — we install the
-    # cu118 wheel explicitly.
-    echo "[setup] installing PyTorch 2.0.1 (cu118 wheel — forward-compatible with CUDA 12.4 driver)"
+    # SALMONN's requirements.txt pins torch==2.0.1 / transformers==4.28.0, but:
+    #   - torch 2.0.1+cu118 → bitsandbytes 0.41.3 → triton.ops ModuleNotFoundError
+    #     (triton dropped triton.ops; 0.41.x bnb still imports it).
+    #   - torch 2.0.1+cu118 + bitsandbytes 0.39.1 → CUDA 12.4 driver vs cu118
+    #     bnb lib "Setup Failed" mismatch on Spartan A100s.
+    # Upgrading to torch 2.1.2 cu121 wheel sidesteps both: cu121 driver-compatible
+    # under forward compat with CUDA 12.4, and bitsandbytes 0.42.0 ships
+    # pre-built cu121 binaries and works on torch 2.1.x without triton.ops.
+    # transformers stays at 4.28.0 — SALMONN's models/ code reads internals from
+    # that exact minor (e.g. LlamaModel forward signature).
+    echo "[setup] installing PyTorch 2.1.2 (cu121 wheel — CUDA 12.4 driver fwd-compatible)"
     pip install --no-cache-dir \
-        torch==2.0.1+cu118 torchaudio==2.0.2+cu118 \
-        --index-url https://download.pytorch.org/whl/cu118
+        torch==2.1.2 torchaudio==2.1.2 \
+        --index-url https://download.pytorch.org/whl/cu121
 
     echo "[setup] installing SALMONN requirements (pinned)"
     pip install --no-cache-dir \
@@ -86,7 +92,7 @@ else
         transformers==4.28.0 \
         sentencepiece==0.1.97 \
         accelerate==0.20.3 \
-        bitsandbytes==0.41.3 \
+        bitsandbytes==0.42.0 \
         soundfile librosa numpy scipy \
         huggingface_hub omegaconf einops timm pyyaml protobuf
 fi
