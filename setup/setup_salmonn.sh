@@ -87,14 +87,20 @@ else
         --index-url https://download.pytorch.org/whl/cu121
 
     echo "[setup] installing SALMONN requirements (pinned)"
+    # timm/huggingface_hub left unpinned in upstream requirements.txt — latest
+    # timm (1.0.x) hard-depends on torch>=2.4 and silently pip-installs torch
+    # 2.8.0 + cu128 wheels, clobbering our pinned torch 2.1.2+cu121. Pin timm
+    # to 0.9.16 (last release supporting torch 2.1) and huggingface_hub to a
+    # version compatible with transformers 4.28.0 (>=0.13,<0.16 — newer hub
+    # removed cached_download which 4.28 imports).
     pip install --no-cache-dir \
         peft==0.3.0 \
         transformers==4.28.0 \
         sentencepiece==0.1.97 \
         accelerate==0.20.3 \
         bitsandbytes==0.42.0 \
-        soundfile librosa numpy scipy \
-        huggingface_hub omegaconf einops timm pyyaml protobuf
+        soundfile librosa "numpy<2" scipy \
+        "huggingface_hub==0.15.1" omegaconf einops "timm==0.9.16" pyyaml protobuf
 fi
 
 # ─── Pre-stage Whisper-large-v2 (~3 GB) ──────────────────────────────────
